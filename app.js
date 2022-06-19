@@ -5,8 +5,13 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
 
-// const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/auth");
+const cartRoutes = require("./routes/cart");
+const categoryRoutes = require("./routes/categories");
+const productRoutes = require("./routes/products");
+const subcatRoutes = require("./routes/subcategories");
+const userRoutes = require("./routes/user");
+const wishlistRoutes = require("./routes/wishlist");
+const orderRoutes = require("./routes/orders");
 
 const app = express();
 
@@ -38,8 +43,14 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.use("/feed", feedRoutes);
-app.use("/auth", authRoutes);
+app.use("/cart", cartRoutes);
+app.use("/category", categoryRoutes);
+app.use("/product", productRoutes);
+app.use("/subcategory", subcatRoutes);
+app.use("/user", userRoutes);
+app.use("/wishlist", wishlistRoutes);
+app.use("/order", orderRoutes);
+
 
 app.use((error, req, res, next) => {
     console.log(error);
@@ -48,10 +59,16 @@ app.use((error, req, res, next) => {
     const data = error.data;
     res.status(status).json({message: message, data: data});
 });
-
-mongoose.connect("mongodb://localhost:27017/shoppingnode", { useNewUrlParser: true, useUnifiedTopology: true })
+let liveConnection = "mongodb+srv://shoppingnode_users:GOLWZbST1ohI74RJ@cluster0.ujkook2.mongodb.net/shoppingnode?retryWrites=true&w=majority";
+let testConnection = "mongodb://localhost:27017/shoppingnode";
+mongoose.connect(liveConnection, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(result => {
-    app.listen(8181);
-    console.log("Server Connected");
+    if(result) {
+        app.listen(8181);
+        console.log("Server Connected");
+    } else {
+        console.log("Error connecting to database");
+    }
+
 })
 .catch(error => console.log(error));

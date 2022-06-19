@@ -25,6 +25,9 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    reset_password_token: {
+        type: String
+    },
     type: {
         type: String,
         enum: ["USER", "ADMIN"],
@@ -33,7 +36,7 @@ const userSchema = new Schema({
     status: {
         type: String,
         enum: ["ACTIVE", "INACTIVE"],
-        default: "ACTIVE"
+        default: "INACTIVE"
     }
 },
 {

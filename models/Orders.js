@@ -19,8 +19,7 @@ const orderSchema = new Schema({
         required: true
     },
     price: {
-        type: Number,
-        required: true
+        type: Number
     },
     user_id: {
         type: Schema.Types.ObjectId,

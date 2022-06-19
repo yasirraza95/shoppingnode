@@ -57,7 +57,8 @@ exports.login = (req, res, next) => {
     const username = req.body.username;
     const password = req.body.password;
     let loadedUser;
-    User.findOne({username:username}).then(user => {
+    User.findOne({username:username})
+    .then(user => {
         if(!user) {
             const error = new Error("No user found against this username");
             error.statusCode = 401;
@@ -71,10 +72,17 @@ exports.login = (req, res, next) => {
             error.statusCode = 401;
             throw error;
         }
+
+        if(loadedUser.status == "INACTIVE") {
+            const error = new Error("Activate your account");
+            error.statusCode = 401;
+            throw error;
+        }
+
         const token = jwt.sign({
             username: loadedUser.username,
             userId: loadedUser._id.toString()
-        }, "somesupersecret", {expiresIn: "1h"});
+        }, "somesupersecret", {expiresIn: "10h"});
         res.status(200).json({token: token, userId: loadedUser._id.toString()});
     }).catch(err => {
         if(!err.statusCode) {
@@ -128,4 +136,88 @@ exports.updateProfile = (req, res, next) => {
         }
         next(err);
     });
+}
+
+exports.forgotPassword = (req, res, next) => {
+    const email = req.body.email;
+
+    User.findOne({email: email})
+    .then(user => {
+        if(!user) {
+            const error = new Error("No user found against requested email");
+            error.statusCode = 404;
+            throw error;
+        }
+        let token = Math.random(new Date()).toString();
+        user.reset_password_token = token.split(".")[1];
+        return user.save();
+    })
+    .then(result => {
+        if(result) {
+            res.status(200).json({message: "An email has been sent. Kindly check your inbox"})
+        } else {
+            res.status(200).json({message: "Error sending email"})
+        }
+    })
+    .catch(err => {
+        if(!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    });
+}
+
+exports.checkForgotToken = (req, res, next) => {
+    const token = req.query.token;
+    User.findOne({reset_password_token: token})
+    .then(user => {
+        if(!user) {
+            const error = new Error("No data found against token");
+            error.statusCode = 404;
+            throw error;
+        } else {
+            res.status(200).json({message: "Token found"})
+        }
+    })
+    .catch(err => {
+        if(!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    });
+}
+
+exports.activateAccount = (req, res, next) => {
+    const username = req.params.username;
+    User.findOne({username: username})
+    .then(user => {
+        if(!user) {
+            const error = new Error("No user found");
+            error.statusCode = 404;
+            throw error;
+        } else if(user.status == "ACTIVE") {
+            const error = new Error("User already activated");
+            error.statusCode = 422;
+            throw error;
+        } else {
+            user.status = "ACTIVE";
+            user.save();
+            res.status(200).json({message: "User activated successfully"})
+        }
+    })
+    .catch(err => {
+        if(!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    });
+}
+
+exports.contact = (req, res, next) => {
+    const name = req.body.name;
+    const email = req.body.email;
+    const subject = req.body.subject;
+    const message = req.body.message;
+    //TODO send email
+    res.status(200).json({message: "Your query has been sent"})
 }
