@@ -1,3 +1,6 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 const path = require("path");
 
 const express = require("express");
@@ -59,9 +62,10 @@ app.use((error, req, res, next) => {
     const data = error.data;
     res.status(status).json({message: message, data: data});
 });
-let liveConnection = "mongodb+srv://shoppingnode_users:GOLWZbST1ohI74RJ@cluster0.ujkook2.mongodb.net/shoppingnode?retryWrites=true&w=majority";
-let testConnection = "mongodb://localhost:27017/shoppingnode";
-mongoose.connect(liveConnection, { useNewUrlParser: true, useUnifiedTopology: true })
+
+let dbConnection = process.env.LIVE_CONNECTION;
+
+mongoose.connect(dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(result => {
     if(result) {
         app.listen(8181);
