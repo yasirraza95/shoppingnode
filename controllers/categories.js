@@ -11,12 +11,15 @@ exports.getAllCategories = (req, res, next) => {
         return Category.find().skip((currentPage - 1) * perPage).limit(perPage);
     })
     .then(data => {
-        res.status(200).json({
-            message: "Data retrieved",
-            data: data,
-            totalItems: totalItems,
-            perPage: perPage
-        });
+        if(data.length > 0) {
+            res.status(200).json({
+                status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
+            });
+        } else {
+            res.status(200).json({
+                status: "FALSE", message: "No data found", data: []
+            });
+        }
     })
     .catch(err => {
         if(!err.statusCode) {

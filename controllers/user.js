@@ -15,9 +15,7 @@ exports.signup = (req, res, next) => {
     const email = req.body.email;
     User.findOne({email: email}).then(result => {
         if(result) {
-            const error = new Error("Email already exists");
-            error.statusCode = 422;
-            throw error;
+            return res.status(422).json({status:"FALSE", message:"Email already exists", data:[]})
         }
     }).catch(error => {
         next(error);
@@ -25,9 +23,7 @@ exports.signup = (req, res, next) => {
     const username = req.body.username;
     User.findOne({username: username}).then(result => {
         if(result) {
-            const error = new Error("Username already exists");
-            error.statusCode = 422;
-            throw error;
+            return res.status(422).json({status:"FALSE", message:"Username already exists", data:[]})
         }
     }).catch(error => {
         next(error);
@@ -44,7 +40,7 @@ exports.signup = (req, res, next) => {
           });
           return user.save();
     }).then(result => {
-        res.status(201).json({message:"User created", userId: result._id})
+        return res.status(201).json({status:"TRUE", message:"User created", data: {userId: result._id}})
     }).catch(error => {
         if(!error.statusCode) {
             error.statusCode = 500;
@@ -60,29 +56,23 @@ exports.login = (req, res, next) => {
     User.findOne({username:username})
     .then(user => {
         if(!user) {
-            const error = new Error("No user found against this username");
-            error.statusCode = 401;
-            throw error;
+            return res.status(401).json({status:"FALSE", message:"No user found against this username", data:[]})
         }
         loadedUser = user;
         return bcrypt.compare(password, user.password);
     }).then(isEqual => {
         if(!isEqual) {
-            const error = new Error("Wrong password");
-            error.statusCode = 401;
-            throw error;
+            return res.status(401).json({status:"FALSE", message:"Wrong Password", data:[]})
         }
 
         if(loadedUser.status == "INACTIVE") {
-            const error = new Error("Activate your account");
-            error.statusCode = 401;
-            throw error;
+            return res.status(401).json({status:"FALSE", message:"Activate your account", data:[]})
         }
 
         const token = jwt.sign({
             username: loadedUser.username,
             userId: loadedUser._id.toString()
-        }, "somesupersecret", {expiresIn: "10h"});
+        }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
         res.status(200).json({token: token, userId: loadedUser._id.toString()});
     }).catch(err => {
         if(!err.statusCode) {
@@ -97,11 +87,10 @@ exports.getProfile = (req, res, next) => {
     User.findById(id)
     .then(user => {
         if(!user) {
-            const error = new Error("No user found against requested id");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({status:"FALSE", message:"No user found against requested id", data:[]})
         }
-        res.status(200).json({message: "User found successfully", user:user})
+
+        res.status(200).json({status:"FALSE", message: "User found successfully", user:user})
     })
     .catch(err => {
         if(!err.statusCode) {
@@ -119,16 +108,14 @@ exports.updateProfile = (req, res, next) => {
     User.findById(id)
     .then(user => {
         if(!user) {
-            const error = new Error("No user found against requested id");
-            error.statusCode = 404;
-            throw error;
+            return res.status(200).json({status:"FALSE", message: "No user found against requested id", user:user})
         }
         user.name = name;
         user.phone = phone;
         return user.save();
     })
     .then(result => {
-        res.status(200).json({message: "Profile update successfully", user:result})
+        res.status(200).json({status:"TRUE", message: "Profile update successfully", user:result})
     })
     .catch(err => {
         if(!err.statusCode) {
@@ -144,9 +131,7 @@ exports.forgotPassword = (req, res, next) => {
     User.findOne({email: email})
     .then(user => {
         if(!user) {
-            const error = new Error("No user found against requested email");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({status:"TRUE", message: "No user found against requested email", user:result})
         }
         let token = Math.random(new Date()).toString();
         user.reset_password_token = token.split(".")[1];
@@ -154,9 +139,9 @@ exports.forgotPassword = (req, res, next) => {
     })
     .then(result => {
         if(result) {
-            res.status(200).json({message: "An email has been sent. Kindly check your inbox"})
+            res.status(200).json({status:"TRUE", message: "An email has been sent. Kindly check your inbox", data:[]})
         } else {
-            res.status(200).json({message: "Error sending email"})
+            res.status(200).json({status:"FALSE", message: "Error sending email", data:[]})
         }
     })
     .catch(err => {

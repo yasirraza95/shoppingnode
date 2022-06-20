@@ -60,10 +60,10 @@ app.use((error, req, res, next) => {
     const status = error.statusCode || 500;
     const message = error.message;
     const data = error.data;
-    res.status(status).json({message: message, data: data});
+    res.status(status).json({status: "FALSE", data: data, message: message});
 });
 
-let dbConnection = process.env.LIVE_CONNECTION;
+let dbConnection = process.env.TEST_CONNECTION;
 
 mongoose.connect(dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(result => {
