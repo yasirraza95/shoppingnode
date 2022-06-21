@@ -63,8 +63,8 @@ exports.addQuantity = (req, res, next) => {
     const filter = {_id:id};
     const update = {quantity:newQty};
 
-    Cart.findOneAndUpdate(filter, update).then(data => {
-        res.status(200).json({status:"TRUE", message:"Quantity increased", data:[]})
+    Cart.findOneAndUpdate(filter, update).then(result => {
+        res.status(200).json({status:"TRUE", message:"Quantity increased", data:{result:result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -86,8 +86,8 @@ exports.removeQuantity = (req, res, next) => {
     const filter = {_id:id};
     const update = {quantity:newQty};
 
-    Cart.findOneAndUpdate(filter, update).then(data => {
-        res.status(200).json({status:"TRUE", message:"Quantity decreased", data:[]})
+    Cart.findOneAndUpdate(filter, update).then(result => {
+        res.status(200).json({status:"TRUE", message:"Quantity decreased", data:{result:result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -101,7 +101,7 @@ exports.deleteById = (req, res, next) => {
     Cart.findByIdAndRemove(id)
     .then(cart => {
         if(cart) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:{cart:cart}})
         } else {
             return res.status(404).json({status:"FALSE", message:"No record found", data:[]})
         }
@@ -118,7 +118,7 @@ exports.deleteUserCart = (req, res, next) => {
     Cart.deleteMany({user_id:id})
     .then(cart => {
         if(cart) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:{cart:cart}})
         } else {
             return res.status(404).json({status:"FALSE", message:"No record found", data:[]})
         }

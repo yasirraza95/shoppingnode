@@ -48,7 +48,7 @@ exports.deleteById = (req, res, next) => {
     Wishlist.findByIdAndRemove(id)
     .then(wishlist => {
         if(wishlist) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:{wishlist:wishlist}})
         } else {
             return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
@@ -65,7 +65,7 @@ exports.deleteUserWishlist = (req, res, next) => {
     Wishlist.deleteMany({user_id:id})
     .then(wishlist => {
         if(wishlist) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:{wishlist:wishlist}})
         } else {
             return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }

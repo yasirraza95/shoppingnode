@@ -16,7 +16,7 @@ exports.getAllSubcat = (req, res, next) => {
                 status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
             });
         } else {
-            res.status(200).json({
+            res.status(404).json({
                 status: "FALSE", message: "No data found", data: []
             });
         }
@@ -34,7 +34,7 @@ exports.addSubcat = (req, res, next) => {
     const cat_id = req.body.cat_id;
     Subcategory.findOne({name: name}).then(data => {
         if(data) {
-            return res.status(201).json({status:"FALSE", message:"Name already exists", data:[]})
+            return res.status(422).json({status:"FALSE", message:"Name already exists", data:[]})
         }
         const subcategory = new Subcategory({
             name: name,

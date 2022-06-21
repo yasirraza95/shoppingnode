@@ -54,7 +54,7 @@ exports.addOrder = (req, res, next) => {
         }
     }).then(result => {
         if(result) {
-            res.status(201).json({status:"TRUE", message:"Order placed", data:{orderId: result._id}})
+            res.status(200).json({status:"TRUE", message:"Order placed", data:{orderId: result._id}})
         } else {
             res.status(500).json({status:"FALSE", message:"Failed to place order", data:[]})
         }
@@ -87,7 +87,7 @@ exports.deleteById = (req, res, next) => {
     Order.findByIdAndRemove(id)
     .then(order => {
         if(order) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:{order:order}})
         } else {
             return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }

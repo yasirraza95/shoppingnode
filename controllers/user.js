@@ -105,7 +105,7 @@ exports.updateProfile = (req, res, next) => {
     User.findById(id)
     .then(user => {
         if(!user) {
-            return res.status(200).json({status:"FALSE", message: "No user found against requested id", user:user})
+            return res.status(404).json({status:"FALSE", message: "No user found against requested id", user:user})
         }
         user.name = name;
         user.phone = phone;
@@ -138,7 +138,7 @@ exports.forgotPassword = (req, res, next) => {
         if(result) {
             res.status(200).json({status:"TRUE", message: "An email has been sent. Kindly check your inbox", data:[]})
         } else {
-            res.status(200).json({status:"FALSE", message: "Error sending email", data:[]})
+            res.status(500).json({status:"FALSE", message: "Error sending email", data:[]})
         }
     })
     .catch(err => {
@@ -154,7 +154,7 @@ exports.checkForgotToken = (req, res, next) => {
     User.findOne({reset_password_token: token})
     .then(user => {
         if(!user) {
-            return res.status(200).json({status:"FALSE", message: "No data found against token", data:[]})
+            return res.status(404).json({status:"FALSE", message: "No data found against token", data:[]})
         } else {
             res.status(200).json({status:"TRUE", message: "Token found", data:[]})
         }
