@@ -25,9 +25,9 @@ exports.addCart = (req, res, next) => {
     }).then(result => {
         if(result) {
             //TODO increase quantity message
-            res.status(201).json({message:"Added to Cart", cartId: result._id})
+            res.status(201).json({status:"TRUE", message:"Added to Cart", data: {cartId: result._id} })
         } else {
-            res.status(500).json({message:"Error adding to cart"})
+            res.status(500).json({status:"FALSE", message:"Error adding to cart", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {
@@ -41,7 +41,7 @@ exports.getByUserId = (req, res, next) => {
     const id = req.params.id;
     Cart.findOne({user_id:id}).populate("prod_id", "name image price")
     .then(data => {
-        res.status(200).json({message:"Data retrieved", cart: data})
+        res.status(200).json({status:"TRUE", message:"Data retrieved", data: {cart: data}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -64,7 +64,7 @@ exports.addQuantity = (req, res, next) => {
     const update = {quantity:newQty};
 
     Cart.findOneAndUpdate(filter, update).then(data => {
-        res.status(200).json({message:"Quantity increased"})
+        res.status(200).json({status:"TRUE", message:"Quantity increased", data:[]})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -87,7 +87,7 @@ exports.removeQuantity = (req, res, next) => {
     const update = {quantity:newQty};
 
     Cart.findOneAndUpdate(filter, update).then(data => {
-        res.status(200).json({message:"Quantity decreased"})
+        res.status(200).json({status:"TRUE", message:"Quantity decreased", data:[]})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -101,11 +101,9 @@ exports.deleteById = (req, res, next) => {
     Cart.findByIdAndRemove(id)
     .then(cart => {
         if(cart) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No record found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {
@@ -120,11 +118,9 @@ exports.deleteUserCart = (req, res, next) => {
     Cart.deleteMany({user_id:id})
     .then(cart => {
         if(cart) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No record found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {

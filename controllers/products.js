@@ -11,12 +11,15 @@ exports.getAllProducts = (req, res, next) => {
         return Product.find().populate("sub_cat_id", "name").skip((currentPage - 1) * perPage).limit(perPage);
     })
     .then(data => {
-        res.status(200).json({
-            message: "Data retrieved",
-            data: data,
-            totalItems: totalItems,
-            perPage: perPage
-        });
+        if(data.length > 0) {
+            res.status(200).json({
+                status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
+            });
+        } else {
+            res.status(200).json({
+                status: "FALSE", message: "No data found", data: []
+            });
+        }
     })
     .catch(err => {
         if(!err.statusCode) {
@@ -33,9 +36,7 @@ exports.addProduct = (req, res, next) => {
     const sub_cat_id = req.body.sub_cat_id;
     Product.findOne({name: name}).then(data => {
         if(data) {
-            const error = new Error("Name already exists");
-            error.statusCode = 422;
-            throw error;
+            return res.status(422).json({status:"FALSE", message:"Name already exists", data:{categoryId: result._id}})
         }
         const product = new Product({
             name: name,
@@ -46,9 +47,9 @@ exports.addProduct = (req, res, next) => {
         return product.save();
     }).then(result => {
         if(result) {
-            res.status(201).json({message:"Product Added", productId: result._id})
+            res.status(201).json({status:"TRUE", message:"Product Added", data:{productId: result._id}})
         } else {
-            res.status(500).json({message:"Error adding product"})
+            res.status(500).json({status:"FALSE", message:"Error adding product", data:[]})
         }
     })
     .catch(err => {
@@ -62,8 +63,8 @@ exports.addProduct = (req, res, next) => {
 exports.getProduct = (req, res, next) => {
     const id = req.params.id;
     Product.findById(id).populate("sub_cat_id", "name")
-    .then(data => {
-        res.status(200).json({message:"Data retrieved", product: data})
+    .then(result => {
+        res.status(200).json({status:"TRUE", message:"Data retrieved", data:{product: result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -80,11 +81,9 @@ exports.updateProduct = (req, res, next) => {
         if(product) {
             product.name = name;
             product.save();
-            res.status(200).json({message:"Data updated", product: product})
+            res.status(200).json({status:"TRUE", message:"Data updated", data:{product: product}})
         } else {
-            const error = new Error("No data found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {
@@ -99,11 +98,9 @@ exports.deleteProduct = (req, res, next) => {
     Product.findByIdAndRemove(id)
     .then(product => {
         if(product) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {

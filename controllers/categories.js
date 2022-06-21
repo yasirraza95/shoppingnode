@@ -33,9 +33,7 @@ exports.addCategory = (req, res, next) => {
     const name = req.body.name;
     Category.findOne({name: name}).then(data => {
         if(data) {
-            const error = new Error("Name already exists");
-            error.statusCode = 422;
-            throw error;
+            return res.status(422).json({status:"FALSE", message:"Name already exists", data:{categoryId: result._id}})
         }
         const category = new Category({
             name: name
@@ -43,9 +41,9 @@ exports.addCategory = (req, res, next) => {
         return category.save();
     }).then(result => {
         if(result) {
-            res.status(201).json({message:"Category Added", categoryId: result._id})
+            res.status(201).json({status:"TRUE", message:"Category Added", data:{categoryId: result._id}})
         } else {
-            res.status(500).json({message:"Error adding category"})
+            res.status(500).json({status:"FALSE", message:"Error adding category", data:[]})
         }
     })
     .catch(err => {
@@ -59,8 +57,8 @@ exports.addCategory = (req, res, next) => {
 exports.getCategory = (req, res, next) => {
     const id = req.params.id;
     Category.findById(id)
-    .then(data => {
-        res.status(200).json({message:"Data retrieved", category: data})
+    .then(result => {
+        res.status(200).json({status:"TRUE", message:"Data retrieved", data:{category: result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -77,11 +75,9 @@ exports.updateCategory = (req, res, next) => {
         if(category) {
             category.name = name;
             category.save();
-            res.status(200).json({message:"Data updated", category: category})
+            res.status(200).json({status:"TRUE", message:"Data updated", data: {category: category}})
         } else {
-            const error = new Error("No data found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data: []})
         }
     }).catch(err => {
         if(!err.statusCode) {
@@ -96,11 +92,9 @@ exports.deleteCategory = (req, res, next) => {
     Category.findByIdAndRemove(id)
     .then(category => {
         if(category) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(200).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {

@@ -11,12 +11,15 @@ exports.getAllSubcat = (req, res, next) => {
         return Subcategory.find().populate("cat_id", "name").skip((currentPage - 1) * perPage).limit(perPage);
     })
     .then(data => {
-        res.status(200).json({
-            message: "Data retrieved",
-            data: data,
-            totalItems: totalItems,
-            perPage: perPage
-        });
+        if(data.length > 0) {
+            res.status(200).json({
+                status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
+            });
+        } else {
+            res.status(200).json({
+                status: "FALSE", message: "No data found", data: []
+            });
+        }
     })
     .catch(err => {
         if(!err.statusCode) {
@@ -31,9 +34,7 @@ exports.addSubcat = (req, res, next) => {
     const cat_id = req.body.cat_id;
     Subcategory.findOne({name: name}).then(data => {
         if(data) {
-            const error = new Error("Name already exists");
-            error.statusCode = 422;
-            throw error;
+            return res.status(201).json({status:"FALSE", message:"Name already exists", data:[]})
         }
         const subcategory = new Subcategory({
             name: name,
@@ -42,9 +43,9 @@ exports.addSubcat = (req, res, next) => {
         return subcategory.save();
     }).then(result => {
         if(result) {
-            res.status(201).json({message:"Sub Category Added", subcategoryId: result._id})
+            res.status(201).json({status:"TRUE", message:"Sub Category Added", data:{subcategoryId: result._id}})
         } else {
-            res.status(500).json({message:"Error adding sub category"})
+            res.status(500).json({status:"FALSE", message:"Error adding sub category", data:[]})
         }
     })
     .catch(err => {
@@ -58,8 +59,8 @@ exports.addSubcat = (req, res, next) => {
 exports.getSubcat = (req, res, next) => {
     const id = req.params.id;
     Subcategory.findById(id).populate("cat_id", "name")
-    .then(data => {
-        res.status(200).json({message:"Data retrieved", subcategory: data})
+    .then(result => {
+        res.status(200).json({status:"TRUE", message:"Data retrieved", data:{subcategory: result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -76,11 +77,9 @@ exports.updateSubcat = (req, res, next) => {
         if(subcategory) {
             subcategory.name = name;
             subcategory.save();
-            res.status(200).json({message:"Data updated", subcategory: subcategory})
+            res.status(200).json({status:"TRUE", message:"Data updated", data:{subcategory: subcategory}})
         } else {
-            const error = new Error("No data found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {
@@ -95,11 +94,9 @@ exports.deleteSubcat = (req, res, next) => {
     Subcategory.findByIdAndRemove(id)
     .then(subcategory => {
         if(subcategory) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {

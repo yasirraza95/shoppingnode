@@ -14,9 +14,7 @@ exports.addOrder = (req, res, next) => {
         if(count) {
             return Cart.find({user_id:user_id}).populate("prod_id", "price");
         } else {
-            const error = new Error("No cart exists");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No cart exists", data:[]})
         }
     }).then(data => {
         if(data) {
@@ -52,13 +50,13 @@ exports.addOrder = (req, res, next) => {
             //TODO delete cart
             return order.save();
         } else {
-            res.status(500).json({message:"Error placing order"})
+            res.status(500).json({status:"FALSE", message:"Error placing order", data:[]})
         }
     }).then(result => {
         if(result) {
-            res.status(201).json({message:"Order placed", orderId: result._id})
+            res.status(201).json({status:"TRUE", message:"Order placed", data:{orderId: result._id}})
         } else {
-            res.status(201).json({message:"Failed to place order"})
+            res.status(500).json({status:"FALSE", message:"Failed to place order", data:[]})
         }
 
     })
@@ -73,8 +71,8 @@ exports.addOrder = (req, res, next) => {
 exports.getByUserId = (req, res, next) => {
     const id = req.params.id;
     Order.find({user_id:id})
-    .then(data => {
-        res.status(200).json({message:"Data retrieved", order: data})
+    .then(result => {
+        res.status(200).json({status:"TRUE", message:"Data retrieved", data: {order: result}})
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -89,11 +87,9 @@ exports.deleteById = (req, res, next) => {
     Order.findByIdAndRemove(id)
     .then(order => {
         if(order) {
-            res.status(200).json({message:"Record removed"})
+            res.status(200).json({status:"TRUE", message:"Record removed", data:[]})
         } else {
-            const error = new Error("No record found");
-            error.statusCode = 404;
-            throw error;           
+            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
         }
     }).catch(err => {
         if(!err.statusCode) {

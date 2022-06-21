@@ -6,10 +6,7 @@ const User = require("../models/User");
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        const error = new Error("Validation failed");
-        error.statusCode = 422;
-        error.data = errors.array();
-        throw error;
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:[]})
     }
     const name = req.body.name;
     const email = req.body.email;
@@ -73,7 +70,7 @@ exports.login = (req, res, next) => {
             username: loadedUser.username,
             userId: loadedUser._id.toString()
         }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
-        res.status(200).json({token: token, userId: loadedUser._id.toString()});
+        res.status(200).json({status:"TRUE", message:"", data: {token: token, userId: loadedUser._id.toString()}});
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;
@@ -90,7 +87,7 @@ exports.getProfile = (req, res, next) => {
             return res.status(404).json({status:"FALSE", message:"No user found against requested id", data:[]})
         }
 
-        res.status(200).json({status:"FALSE", message: "User found successfully", user:user})
+        res.status(200).json({status:"TRUE", message: "User found successfully", data:{user:user}})
     })
     .catch(err => {
         if(!err.statusCode) {
@@ -157,11 +154,9 @@ exports.checkForgotToken = (req, res, next) => {
     User.findOne({reset_password_token: token})
     .then(user => {
         if(!user) {
-            const error = new Error("No data found against token");
-            error.statusCode = 404;
-            throw error;
+            return res.status(200).json({status:"FALSE", message: "No data found against token", data:[]})
         } else {
-            res.status(200).json({message: "Token found"})
+            res.status(200).json({status:"TRUE", message: "Token found", data:[]})
         }
     })
     .catch(err => {
@@ -177,17 +172,13 @@ exports.activateAccount = (req, res, next) => {
     User.findOne({username: username})
     .then(user => {
         if(!user) {
-            const error = new Error("No user found");
-            error.statusCode = 404;
-            throw error;
+            return res.status(404).json({status:"FALSE", message: "No user found", data:[]})
         } else if(user.status == "ACTIVE") {
-            const error = new Error("User already activated");
-            error.statusCode = 422;
-            throw error;
+            return res.status(422).json({status:"FALSE", message: "User already activated", data:[]})
         } else {
             user.status = "ACTIVE";
             user.save();
-            res.status(200).json({message: "User activated successfully"})
+            res.status(200).json({status:"TRUE", message: "User activated successfully", data:[]})
         }
     })
     .catch(err => {
@@ -204,5 +195,5 @@ exports.contact = (req, res, next) => {
     const subject = req.body.subject;
     const message = req.body.message;
     //TODO send email
-    res.status(200).json({message: "Your query has been sent"})
+    res.status(200).json({status:"TRUE", message: "Your query has been sent", data:[]})
 }
