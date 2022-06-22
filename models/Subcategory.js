@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const subcategorySchema = Schema({
     name: {
         type: String,
-        required: true
+        required: [true, "Name is required"]
     },
     cat_id: {
         type: Schema.Types.ObjectId,

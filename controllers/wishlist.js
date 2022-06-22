@@ -2,10 +2,14 @@ const { validationResult } = require("express-validator");
 const Wishlist = require("../models/Wishlist");
 
 exports.addWishlist = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+
     const user_id = req.body.user_id;
     const prod_id = req.body.prod_id;
-    const quantity = req.body.quantity;
-    let newQty = 0;
+
     Wishlist.findOne({user_id:user_id, prod_id:prod_id}).then(data => {
         if(data) {
             return res.status(422).json({status:"FALSE", message:"Already in wishlist", data: []})

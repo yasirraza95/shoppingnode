@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const orderSchema = new Schema({
     address: {
         type: String,
-        required: true
+        required: [true, "Address is required"]
     },
     date: {
         type: Date,
@@ -12,11 +12,11 @@ const orderSchema = new Schema({
     },
     email: {
         type: String,
-        required: true
+        required: [true, "Email is required"]
     },
     phone: {
         type: Number,
-        required: true
+        required: [true, "Phone is required"]
     },
     price: {
         type: Number
@@ -33,15 +33,15 @@ const orderSchema = new Schema({
             },
             quantity: {
                 type: Number,
-                required: true
+                required: [true, "Quantity is required"]
             },
             price: {
                 type: Number,
-                required: true
+                required: [true, "Price is required"]
             },
             total_price: {
                 type: Number,
-                required: true
+                required: [true, "Total Price is required"]
             },
         }
     ]

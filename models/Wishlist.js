@@ -5,12 +5,12 @@ const wishlistSchema = Schema({
     user_id: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: [true, "User is required"]
     },
     prod_id: {
         type: Schema.Types.ObjectId,
         ref: "Product",
-        required: true
+        required: [true, "Product is required"]
     },
     
 },

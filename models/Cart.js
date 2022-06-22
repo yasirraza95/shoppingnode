@@ -5,16 +5,16 @@ const cartSchema = Schema({
     user_id: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: [true, "User is required"]
     },
     prod_id: {
         type: Schema.Types.ObjectId,
         ref: "Product",
-        required: true
+        required: [true, "Product is required"]
     },
     quantity: {
         type: Number,
-        required: true
+        required: [true, "Quantity is required"]
     },
     status: {
         type: String,

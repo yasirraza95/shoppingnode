@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const categorySchema = Schema({
     name: {
         type: String,
-        required: true
+        required: [true, "Name is required"]
     },
     status: {
         type: String,

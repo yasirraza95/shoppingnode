@@ -4,15 +4,15 @@ const Schema = mongoose.Schema;
 const productSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: [true, "Name is required"]
     },
     image: {
         type: String,
-        required: true
+        required: [true, "Image is required"]
     },
     price: {
         type: Number,
-        required: true
+        required: [true, "Price is required"]
     },
     sub_cat_id: {
         type: Schema.Types.ObjectId,
