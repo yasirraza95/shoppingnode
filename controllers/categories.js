@@ -30,6 +30,11 @@ exports.getAllCategories = (req, res, next) => {
 }
 
 exports.addCategory = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+    
     const name = req.body.name;
     Category.findOne({name: name}).then(data => {
         if(data) {
