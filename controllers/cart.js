@@ -2,6 +2,11 @@ const { validationResult } = require("express-validator");
 const Cart = require("../models/Cart");
 
 exports.addCart = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+    
     const user_id = req.body.user_id;
     const prod_id = req.body.prod_id;
     const quantity = req.body.quantity;
