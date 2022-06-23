@@ -30,6 +30,11 @@ exports.getAllSubcat = (req, res, next) => {
 }
 
 exports.addSubcat = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+    
     const name = req.body.name;
     const cat_id = req.body.cat_id;
     Subcategory.findOne({name: name}).then(data => {
