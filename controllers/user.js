@@ -6,7 +6,7 @@ const User = require("../models/User");
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:[]})
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
     }
     const name = req.body.name;
     const email = req.body.email;
