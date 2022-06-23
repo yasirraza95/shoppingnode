@@ -30,6 +30,11 @@ exports.getAllProducts = (req, res, next) => {
 }
 
 exports.addProduct = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+    
     const name = req.body.name;
     const image = req.body.image;
     const price = req.body.price;
