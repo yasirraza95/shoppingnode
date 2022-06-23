@@ -3,6 +3,11 @@ const Order = require("../models/Orders");
 const Cart = require("../models/Cart");
 
 exports.addOrder = (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+    }
+    
     const user_id = req.body.user_id;
     const address = req.body.address;
     const email = req.body.email;
