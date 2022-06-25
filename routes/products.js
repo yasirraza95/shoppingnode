@@ -8,7 +8,6 @@ const Role = require("../helpers/role");
 router.get("/all", authorize(), productController.getAllProducts);
 router.post("/add", authorize(Role.Admin), [
     check("name", "Name is required").notEmpty(),
-    check("image", "Image is required").notEmpty(),
     check("price", "Price is required").notEmpty(),
     check("sub_cat_id", "Subcategory Id is required").notEmpty()
 ], productController.addProduct);

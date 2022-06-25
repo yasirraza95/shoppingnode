@@ -47,7 +47,9 @@ exports.signup = (req, res, next) => {
           });
           return user.save();
     }).then(result => {
-        let activationUrl = process.env.TEST_URL+"activation/"+result.username;
+        let userName = result.username;
+        let activationUrl = process.env.TEST_URL+"activation/"+userName;
+        
         let emailData = {
             from: process.env.EMAIL_FROM,
             to: result.email,
@@ -55,7 +57,6 @@ exports.signup = (req, res, next) => {
             html: `Congratulations! Your account has been created. Kindly visit the link to activate your account
              <a href="${activationUrl}">${activationUrl}</a>`
         }
-        
         transporter.sendMail(emailData, (err, info) => {
             if (err) {
                 res.status(500).json({status:"FALSE", message: "User created but error in sending email", data: {userId: result._id, response:err}})
@@ -70,39 +71,6 @@ exports.signup = (req, res, next) => {
         next(error);
     })
 }
-
-// exports.login = (req, res, next) => {
-//     const username = req.body.username;
-//     const password = req.body.password;
-//     let loadedUser;
-//     User.findOne({username:username})
-//     .then(user => {
-//         if(!user) {
-//             return res.status(401).json({status:"FALSE", message:"No user found against this username", data:[]})
-//         }
-//         loadedUser = user;
-//         return bcrypt.compare(password, user.password);
-//     }).then(isEqual => {
-//         if(!isEqual) {
-//             return res.status(401).json({status:"FALSE", message:"Wrong Password", data:[]})
-//         }
-
-//         if(loadedUser.status == "INACTIVE") {
-//             return res.status(401).json({status:"FALSE", message:"Activate your account", data:[]})
-//         }
-
-//         const token = jwt.sign({
-//             username: loadedUser.username,
-//             userId: loadedUser._id.toString()
-//         }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
-//         res.status(200).json({status:"TRUE", message:"", data: {token: token, userId: loadedUser._id.toString()}});
-//     }).catch(err => {
-//         if(!err.statusCode) {
-//             err.statusCode = 500;
-//         }
-//         next(err);
-//     });
-// }
 
 exports.login = (req, res, next) => {
     const username = req.body.username;
@@ -239,6 +207,7 @@ exports.checkForgotToken = (req, res, next) => {
 
 exports.activateAccount = (req, res, next) => {
     const username = req.params.username;
+
     User.findOne({username: username})
     .then(user => {
         if(!user) {

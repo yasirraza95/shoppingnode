@@ -19,10 +19,11 @@ exports.addOrder = (req, res, next) => {
         if(count) {
             return Cart.find({user_id:user_id}).populate("prod_id", "price");
         } else {
-            return res.status(404).json({status:"FALSE", message:"No cart exists", data:[]})
+            res.status(404).json({status:"FALSE", message:"No cart exists", data:[]});
+            
         }
     }).then(data => {
-        if(data) {
+        if(data != undefined) {
             let totalPrice = 0;
             let ordDet = {
                 prod_id: "",
@@ -52,7 +53,11 @@ exports.addOrder = (req, res, next) => {
                 price:totalPrice,
                 order_detail: ordDet
             });
-            //TODO delete cart
+            console.log(user_id);
+            Cart.deleteMany({user_id:user_id}, err => {
+                if(err) 
+                    return res.status(500).json({status:"FALSE", message:"Error removing cart", data:[]})
+            });
             return order.save();
         } else {
             res.status(500).json({status:"FALSE", message:"Error placing order", data:[]})

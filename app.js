@@ -1,12 +1,10 @@
-const dotenv = require("dotenv");
-dotenv.config();
-
-const path = require("path");
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const multer = require("multer");
+const fileUpload = require("express-fileupload");
+
+const dotenv = require("dotenv");
+dotenv.config();
 
 const cartRoutes = require("./routes/cart");
 const categoryRoutes = require("./routes/categories");
@@ -15,29 +13,10 @@ const subcatRoutes = require("./routes/subcategories");
 const userRoutes = require("./routes/user");
 const wishlistRoutes = require("./routes/wishlist");
 const orderRoutes = require("./routes/orders");
-
 const app = express();
 
-const fileStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "images");
-    },
-    filename: (req, file, cb) => {
-        cb(null, new Date().toISOString() + "-" + file.originalname);
-    }
-});
-
-const fileFilter = (req, file, cb) => {
-    if(file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg" ) {
-        cb(null, true);
-    } else {
-        cb(null, false);
-    }
-};
 
 app.use(bodyParser.json());
-app.use(multer({storage: fileStorage, fileFilter: fileFilter}).single("image"));
-app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -45,6 +24,14 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     next();
 });
+
+app.use(fileUpload({
+    currentParentPath: true,
+    limits: {
+        fileSize: 1024 * 1024
+    },
+    abortOnLimit: true
+}));
 
 app.use("/cart", cartRoutes);
 app.use("/category", categoryRoutes);

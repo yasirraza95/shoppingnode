@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const Product = require("../models/Product");
+const path = require("path");
 
 exports.getAllProducts = (req, res, next) => {
     const currentPage = req.query.page || 1;
@@ -34,22 +35,36 @@ exports.addProduct = (req, res, next) => {
     if(!errors.isEmpty()) {
         return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
     }
-    
+
     const name = req.body.name;
-    const image = req.body.image;
+    const file = req.files.image;
     const price = req.body.price;
     const sub_cat_id = req.body.sub_cat_id;
-    Product.findOne({name: name}).then(data => {
-        if(data) {
+
+    Product.findOne({name: name}).then(result => {
+        if(result) {
             return res.status(422).json({status:"FALSE", message:"Name already exists", data:{categoryId: result._id}})
         }
         const product = new Product({
             name: name,
-            image: image,
+            image: file.name,
             price: price,
             sub_cat_id: sub_cat_id
         });
-        return product.save();
+        const filePath =  "./uploads/" + file.name;
+        const extension = path.extname(file.name);
+        const allowedExtensions = [".png", ".jpg", ".jpeg"];
+        if(!allowedExtensions.includes(extension)) {
+            return res.status(422).json({status:"FALSE", message:"File type not allowed", data:[]})
+        } else {
+            file.mv(filePath, (err) => {
+                if(err)
+                console.log(err);
+                return res.status(500).json({status:"FALSE", message:"Failed to upload image", data:[]})
+            });
+ 
+            return product.save();
+        }
     }).then(result => {
         if(result) {
             res.status(201).json({status:"TRUE", message:"Product Added", data:{productId: result._id}})
