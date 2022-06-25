@@ -55,7 +55,7 @@ let dbConnection = process.env.NODE_ENV === 'production' ? process.env.LIVE_CONN
 mongoose.connect(dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(result => {
     if(result) {
-        app.listen(8181);
+        app.listen(process.env.PORT || 8080);
         console.log("Server Connected");
     } else {
         console.log("Error connecting to database");
