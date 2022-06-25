@@ -63,7 +63,7 @@ app.use((error, req, res, next) => {
     res.status(status).json({status: "FALSE", data: data, message: message});
 });
 
-let dbConnection = process.env.TEST_CONNECTION;
+let dbConnection = process.env.NODE_ENV === 'production' ? process.env.LIVE_CONNECTION : process.env.TEST_CONNECTION;
 
 mongoose.connect(dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(result => {

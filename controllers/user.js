@@ -1,7 +1,17 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require('nodemailer');
 const User = require("../models/User");
+
+var transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
@@ -37,7 +47,22 @@ exports.signup = (req, res, next) => {
           });
           return user.save();
     }).then(result => {
-        return res.status(201).json({status:"TRUE", message:"User created", data: {userId: result._id}})
+        let activationUrl = process.env.TEST_URL+"activation/"+result.username;
+        let emailData = {
+            from: process.env.EMAIL_FROM,
+            to: result.email,
+            subject: "Account Registration",
+            html: `Congratulations! Your account has been created. Kindly visit the link to activate your account
+             <a href="${activationUrl}">${activationUrl}</a>`
+        }
+        
+        transporter.sendMail(emailData, (err, info) => {
+            if (err) {
+                res.status(500).json({status:"FALSE", message: "User created but error in sending email", data: {userId: result._id, response:err}})
+            } else {
+                res.status(201).json({status:"TRUE", message:"User created", data: {userId: result._id, response:info}})
+            }
+        })
     }).catch(error => {
         if(!error.statusCode) {
             error.statusCode = 500;
@@ -45,6 +70,39 @@ exports.signup = (req, res, next) => {
         next(error);
     })
 }
+
+// exports.login = (req, res, next) => {
+//     const username = req.body.username;
+//     const password = req.body.password;
+//     let loadedUser;
+//     User.findOne({username:username})
+//     .then(user => {
+//         if(!user) {
+//             return res.status(401).json({status:"FALSE", message:"No user found against this username", data:[]})
+//         }
+//         loadedUser = user;
+//         return bcrypt.compare(password, user.password);
+//     }).then(isEqual => {
+//         if(!isEqual) {
+//             return res.status(401).json({status:"FALSE", message:"Wrong Password", data:[]})
+//         }
+
+//         if(loadedUser.status == "INACTIVE") {
+//             return res.status(401).json({status:"FALSE", message:"Activate your account", data:[]})
+//         }
+
+//         const token = jwt.sign({
+//             username: loadedUser.username,
+//             userId: loadedUser._id.toString()
+//         }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
+//         res.status(200).json({status:"TRUE", message:"", data: {token: token, userId: loadedUser._id.toString()}});
+//     }).catch(err => {
+//         if(!err.statusCode) {
+//             err.statusCode = 500;
+//         }
+//         next(err);
+//     });
+// }
 
 exports.login = (req, res, next) => {
     const username = req.body.username;
@@ -65,10 +123,9 @@ exports.login = (req, res, next) => {
         if(loadedUser.status == "INACTIVE") {
             return res.status(401).json({status:"FALSE", message:"Activate your account", data:[]})
         }
-
         const token = jwt.sign({
-            username: loadedUser.username,
-            userId: loadedUser._id.toString()
+            id: loadedUser._id,
+            role: loadedUser.type
         }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
         res.status(200).json({status:"TRUE", message:"", data: {token: token, userId: loadedUser._id.toString()}});
     }).catch(err => {
@@ -136,9 +193,22 @@ exports.forgotPassword = (req, res, next) => {
     })
     .then(result => {
         if(result) {
-            res.status(200).json({status:"TRUE", message: "An email has been sent. Kindly check your inbox", data:[]})
+            let emailData = {
+                from: process.env.EMAIL_FROM,
+                to: result.email,
+                subject: "Forgot Password",
+                html: `Hi ${result.name}! You have requested a forgot password request. Kindly visit the link to generate new password. <a href="${process.env.TEST_URL}">${process.env.TEST_URL}</a>`
+            }
+            
+            transporter.sendMail(emailData, (err, info) => {
+                if (err) {
+                    res.status(500).json({status:"FALSE", message: "Error sending email", data:err})
+                } else {
+                    res.status(200).json({status:"TRUE", message: "An email has been sent. Kindly check your inbox", data:info})
+                }
+            })
         } else {
-            res.status(500).json({status:"FALSE", message: "Error sending email", data:[]})
+            res.status(500).json({status:"FALSE", message: "Error initializing forgot request", data:[]})
         }
     })
     .catch(err => {
@@ -194,6 +264,20 @@ exports.contact = (req, res, next) => {
     const email = req.body.email;
     const subject = req.body.subject;
     const message = req.body.message;
-    //TODO send email
-    res.status(200).json({status:"TRUE", message: "Your query has been sent", data:[]})
+    
+    let emailData = {
+        from: process.env.EMAIL_FROM,
+        to: process.env.EMAIL_ADMIN,
+        subject: "Contact Us",
+        html: `<h4>Name:</h4> ${name} <br/><h4>Email:</h4> ${email} <br/><h4>Subject:</h4> ${subject}
+         <br><h4>Message:</h4> ${message}`
+    }
+    
+    transporter.sendMail(emailData, (err, info) => {
+        if (err) {
+            res.status(500).json({status:"FALSE", message: "Error sending email", data:err})
+        } else {
+            res.status(200).json({status:"TRUE", message: "Your query has been sent", data:info})
+        }
+    })
 }

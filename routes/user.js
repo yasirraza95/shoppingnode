@@ -1,8 +1,9 @@
 const express = require("express");
 const { body } = require("express-validator");
 const userController = require("../controllers/user");
-const isAuth = require("../middleware/is-auth");
 const router = express.Router();
+const authorize = require("../middleware/authorize");
+const Role = require("../helpers/role");
 
 router.post(
     '/signup',
@@ -18,8 +19,8 @@ router.post(
 
 router.post("/login", userController.login);
 
-router.get("/profile/:id", isAuth, userController.getProfile);
-router.put("/profile/:id", isAuth, userController.updateProfile);
+router.get("/profile/:id", authorize(Role.User), userController.getProfile);
+router.put("/profile/:id", authorize(Role.User), userController.updateProfile);
 
 router.post("/forgot", userController.forgotPassword);
 router.get("/checkToken", userController.checkForgotToken);

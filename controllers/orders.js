@@ -73,6 +73,36 @@ exports.addOrder = (req, res, next) => {
     });
 }
 
+
+exports.getAllOrders = (req, res, next) => {
+    const currentPage = req.query.page || 1;
+    const perPage = 10;
+    let totalItems;
+    Order.find().countDocuments()
+    .then(count => {
+        totalItems = count;
+        return Order.find().skip((currentPage - 1) * perPage).limit(perPage);
+    })
+    .then(data => {
+        if(data.length > 0) {
+            res.status(200).json({
+                status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
+            });
+        } else {
+            res.status(200).json({
+                status: "FALSE", message: "No data found", data: []
+            });
+        }
+    })
+    .catch(err => {
+        if(!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    });
+}
+
+
 exports.getByUserId = (req, res, next) => {
     const id = req.params.id;
     Order.find({user_id:id})
