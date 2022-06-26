@@ -32,14 +32,20 @@ exports.getAllSubcat = (req, res, next) => {
 exports.addSubcat = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+        const error = new Error('Validation failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
     }
     
     const name = req.body.name;
     const cat_id = req.body.cat_id;
     Subcategory.findOne({name: name}).then(data => {
         if(data) {
-            return res.status(422).json({status:"FALSE", message:"Name already exists", data:[]})
+            const error = new Error('Name already exists');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         }
         const subcategory = new Subcategory({
             name: name,
@@ -50,7 +56,10 @@ exports.addSubcat = (req, res, next) => {
         if(result) {
             res.status(201).json({status:"TRUE", message:"Sub Category Added", data:{subcategoryId: result._id}})
         } else {
-            res.status(500).json({status:"FALSE", message:"Error adding sub category", data:[]})
+            const error = new Error('Error adding subcategory');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         }
     })
     .catch(err => {

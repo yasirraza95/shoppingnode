@@ -16,13 +16,19 @@ var transporter = nodemailer.createTransport({
 exports.signup = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+        const error = new Error('Validation failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
     }
     const name = req.body.name;
     const email = req.body.email;
     User.findOne({email: email}).then(result => {
         if(result) {
-            return res.status(422).json({status:"FALSE", message:"Email already exists", data:[]})
+            const error = new Error('Email already exists');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         }
     }).catch(error => {
         next(error);
@@ -30,7 +36,10 @@ exports.signup = (req, res, next) => {
     const username = req.body.username;
     User.findOne({username: username}).then(result => {
         if(result) {
-            return res.status(422).json({status:"FALSE", message:"Username already exists", data:[]})
+            const error = new Error('Username already exists');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         }
     }).catch(error => {
         next(error);
@@ -109,10 +118,10 @@ exports.getProfile = (req, res, next) => {
     User.findById(id)
     .then(user => {
         if(!user) {
-            return res.status(404).json({status:"FALSE", message:"No user found against requested id", data:[]})
+            res.status(404).json({status:"FALSE", message:"No user found against requested id", data:[]})
+        } else {
+            res.status(200).json({status:"TRUE", message: "User found successfully", data:{user:user}})
         }
-
-        res.status(200).json({status:"TRUE", message: "User found successfully", data:{user:user}})
     })
     .catch(err => {
         if(!err.statusCode) {

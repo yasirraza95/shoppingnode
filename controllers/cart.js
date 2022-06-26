@@ -4,7 +4,10 @@ const Cart = require("../models/Cart");
 exports.addCart = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+        const error = new Error('Validation failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
     }
     
     const user_id = req.body.user_id;

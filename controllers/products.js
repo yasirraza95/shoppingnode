@@ -33,7 +33,10 @@ exports.getAllProducts = (req, res, next) => {
 exports.addProduct = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+        const error = new Error('Validation failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
     }
 
     const name = req.body.name;
@@ -43,7 +46,10 @@ exports.addProduct = (req, res, next) => {
 
     Product.findOne({name: name}).then(result => {
         if(result) {
-            return res.status(422).json({status:"FALSE", message:"Name already exists", data:{categoryId: result._id}})
+            const error = new Error('Name already exists');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         }
         const product = new Product({
             name: name,
@@ -55,12 +61,18 @@ exports.addProduct = (req, res, next) => {
         const extension = path.extname(file.name);
         const allowedExtensions = [".png", ".jpg", ".jpeg"];
         if(!allowedExtensions.includes(extension)) {
-            return res.status(422).json({status:"FALSE", message:"File type not allowed", data:[]})
+            const error = new Error('File type not allowed');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         } else {
             file.mv(filePath, (err) => {
-                if(err)
-                console.log(err);
-                return res.status(500).json({status:"FALSE", message:"Failed to upload image", data:[]})
+                if(err) {
+                    const error = new Error('Failed to upload image');
+                    error.statusCode = 500;
+                    error.data = errors.array();
+                    throw error;
+                }
             });
  
             return product.save();
@@ -69,7 +81,10 @@ exports.addProduct = (req, res, next) => {
         if(result) {
             res.status(201).json({status:"TRUE", message:"Product Added", data:{productId: result._id}})
         } else {
-            res.status(500).json({status:"FALSE", message:"Error adding product", data:[]})
+            const error = new Error('Error adding product');
+            error.statusCode = 500;
+            error.data = errors.array();
+            throw error;
         }
     })
     .catch(err => {

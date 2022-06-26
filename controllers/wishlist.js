@@ -4,7 +4,10 @@ const Wishlist = require("../models/Wishlist");
 exports.addWishlist = (req, res, next) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).json({status:"FALSE", message:"Validation failed", data:errors.array()})
+        const error = new Error('Validation failed.');
+        error.statusCode = 422;
+        error.data = errors.array();
+        throw error;
     }
 
     const user_id = req.body.user_id;
@@ -12,7 +15,10 @@ exports.addWishlist = (req, res, next) => {
 
     Wishlist.findOne({user_id:user_id, prod_id:prod_id}).then(data => {
         if(data) {
-            return res.status(422).json({status:"FALSE", message:"Already in wishlist", data: []})
+            const error = new Error('Already in wishlist');
+            error.statusCode = 422;
+            error.data = errors.array();
+            throw error;
         } else {
             const wishlist = new Wishlist({
                 user_id: user_id,
