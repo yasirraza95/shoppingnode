@@ -104,7 +104,7 @@ exports.login = (req, res, next) => {
             id: loadedUser._id,
             role: loadedUser.type
         }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRY});
-        res.status(200).json({status:"TRUE", message:"", data: {token: token, userId: loadedUser._id.toString()}});
+        res.status(200).json({status:"TRUE", message:"", data: {token: token, role: loadedUser.type, userId: loadedUser._id.toString()}});
     }).catch(err => {
         if(!err.statusCode) {
             err.statusCode = 500;

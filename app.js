@@ -56,7 +56,7 @@ mongoose.connect(dbConnection, { useNewUrlParser: true, useUnifiedTopology: true
 .then(result => {
     if(result) {
         app.listen(process.env.PORT || 8080);
-        console.log("Server Connected");
+        console.log(`Server Connected on port ${process.env.PORT}`);
     } else {
         console.log("Error connecting to database");
     }
