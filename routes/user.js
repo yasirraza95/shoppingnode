@@ -11,7 +11,7 @@ router.post(
       body('email').isEmail().withMessage('Please enter a valid email.').normalizeEmail(),
       body('password').trim().isLength({ min: 5 }),
       body('name').trim().not().isEmpty(),
-      body('phone').isLength({ min: 11 }).withMessage("Please enter a valid mobile no.").not().isEmpty(),
+      body('phone').isLength({ min: 10 }).withMessage("Please enter a valid mobile no.").not().isEmpty(),
       body('username').trim().not().isEmpty()
     ],
     userController.signup

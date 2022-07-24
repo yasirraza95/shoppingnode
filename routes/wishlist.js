@@ -6,6 +6,10 @@ const authorize = require("../middleware/authorize");
 const Role = require("../helpers/role");
 
 router.get("/get/:id", authorize(Role.User), wishlistController.getByUserId);
+router.post("/existItem", authorize(Role.User), [
+    check("user_id", "User Id is required").notEmpty(),
+    check("prod_id", "Product Id is required").notEmpty()
+], wishlistController.existItem);
 router.post("/add", authorize(Role.User), [
     check("user_id", "User Id is required").notEmpty(),
     check("prod_id", "Product Id is required").notEmpty()

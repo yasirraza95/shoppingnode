@@ -16,7 +16,7 @@ exports.getAllCategories = (req, res, next) => {
                 status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
             });
         } else {
-            res.status(200).json({
+            res.status(404).json({
                 status: "FALSE", message: "No data found", data: {}
             });
         }

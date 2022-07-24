@@ -3,149 +3,127 @@ const Order = require("../models/Orders");
 const Cart = require("../models/Cart");
 
 exports.addOrder = (req, res, next) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()) {
-        const error = new Error('Validation failed.');
-        error.statusCode = 422;
-        error.data = errors.array();
-        throw error;
-    }
-    
-    const user_id = req.body.user_id;
-    const address = req.body.address;
-    const email = req.body.email;
-    const phone = req.body.phone;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new Error("Validation failed.");
+    error.statusCode = 422;
+    error.data = errors.array();
+    throw error;
+  }
 
-    Cart.find({user_id:user_id})
-    .countDocuments()
-    .then(count => {
-        if(count) {
-            return Cart.find({user_id:user_id}).populate("prod_id", "price");
-        } else {
-            const error = new Error('No cart exists');
-            error.statusCode = 404;
-            error.data = errors.array();
-            throw error;
-        }
-    }).then(data => {
-        if(data != undefined) {
-            let totalPrice = 0;
-            let ordDet = {
-                prod_id: "",
-                quantity: "",
-                price: "",
-                total_price: ""
-            };
+  const user_id = req.body.user_id;
+  const address = req.body.address;
+  const email = req.body.email;
+  const phone = req.body.phone;
+  const price = req.body.price;
+  const orderDtl = req.body.order_detail;
 
-            data.forEach(element => {
-                let prodId = element.prod_id._id; 
-                let price = element.prod_id.price;
-                let quantity = element.quantity;
-                let prodPrice = price * quantity;
-                totalPrice += prodPrice;
-
-                ordDet["prod_id"] = prodId;
-                ordDet["quantity"] = quantity;
-                ordDet["price"] = price;
-                ordDet["total_price"] = quantity * price;
-            });
-
-            const order = new Order({
-                user_id:user_id,
-                address:address,
-                email:email,
-                phone:phone,
-                price:totalPrice,
-                order_detail: ordDet
-            });
-            console.log(user_id);
-            Cart.deleteMany({user_id:user_id}, err => {
-                if(err) 
-                    return res.status(500).json({status:"FALSE", message:"Error removing cart", data:[]})
-            });
-            return order.save();
-        } else {
-            const error = new Error('Error placing order');
-            error.statusCode = 500;
-            error.data = errors.array();
-            throw error;
-        }
-    }).then(result => {
-        if(result) {
-            res.status(200).json({status:"TRUE", message:"Order placed", data:{orderId: result._id}})
-        } else {
-            const error = new Error('Failed to place order');
-            error.statusCode = 500;
-            error.data = errors.array();
-            throw error;
-        }
-
+  const order = new Order({
+    user_id: user_id,
+    address: address,
+    email: email,
+    phone: phone,
+    price: price,
+    order_detail: orderDtl.map((x) => ({
+      ...x,
+      product: x._id,
+      total_price: x.price * x.quantity,
+    })),
+  });
+  order
+    .save()
+    .then((response) => {
+        res.status(200).json({
+            status: true,
+            message: "Order placed",
+            data: { response },
+          });
     })
-    .catch(err => {
-        if(!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
+    .catch((err) => {
+        res.status(200).json({
+            status: false,
+            message: "Failed to place order",
+            data:  err.message ,
+          });
+          next();
     });
-}
 
+  
+};
 
 exports.getAllOrders = (req, res, next) => {
-    const currentPage = req.query.page || 1;
-    const perPage = 10;
-    let totalItems;
-    Order.find().countDocuments()
-    .then(count => {
-        totalItems = count;
-        return Order.find().skip((currentPage - 1) * perPage).limit(perPage);
+  const currentPage = req.query.page || 1;
+  const perPage = 10;
+  let totalItems;
+  Order.find()
+    .countDocuments()
+    .then((count) => {
+      totalItems = count;
+      return Order.find()
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage);
     })
-    .then(data => {
-        if(data.length > 0) {
-            res.status(200).json({
-                status: "TRUE", message: "Data retrieved", data: {items: data, totalItems: totalItems, perPage: perPage}, 
-            });
-        } else {
-            res.status(200).json({
-                status: "FALSE", message: "No data found", data: []
-            });
-        }
+    .then((data) => {
+      if (data.length > 0) {
+        res.status(200).json({
+          status: "TRUE",
+          message: "Data retrieved",
+          data: { items: data, totalItems: totalItems, perPage: perPage },
+        });
+      } else {
+        res.status(200).json({
+          status: "FALSE",
+          message: "No data found",
+          data: [],
+        });
+      }
     })
-    .catch(err => {
-        if(!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
     });
-}
-
+};
 
 exports.getByUserId = (req, res, next) => {
-    const id = req.params.id;
-    Order.find({user_id:id})
-    .then(result => {
-        res.status(200).json({status:"TRUE", message:"Data retrieved", data: {order: result}})
-    }).catch(err => {
-        if(!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
+  const id = req.params.id;
+  Order.find({ user_id: id })
+    .then((result) => {
+      res.status(200).json({
+        status: "TRUE",
+        message: "Data retrieved",
+        data: { order: result },
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
     });
-}
-
+};
 
 exports.deleteById = (req, res, next) => {
-    const id = req.params.id;
-    Order.findByIdAndRemove(id)
-    .then(order => {
-        if(order) {
-            res.status(200).json({status:"TRUE", message:"Record removed", data:{order:order}})
-        } else {
-            return res.status(404).json({status:"FALSE", message:"No data found", data:[]})
-        }
-    }).catch(err => {
-        if(!err.statusCode) {
-            err.statusCode = 500;
-        }
-        next(err);
+  const id = req.params.id;
+  Order.findByIdAndRemove(id)
+    .then((order) => {
+      if (order) {
+        res.status(200).json({
+          status: "TRUE",
+          message: "Record removed",
+          data: { order: order },
+        });
+      } else {
+        return res
+          .status(404)
+          .json({ status: "FALSE", message: "No data found", data: [] });
+      }
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
     });
-}
+};
