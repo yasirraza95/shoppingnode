@@ -105,7 +105,7 @@ exports.login = (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
   let loadedUser;
-  User.findOne({ username: username })
+  User.findOne({ username: username, type: "USER" })
     .then((user) => {
       if (!user) {
         return res.status(401).json({
@@ -119,13 +119,11 @@ exports.login = (req, res, next) => {
     })
     .then((isEqual) => {
       if (!isEqual) {
-        return res
-          .status(401)
-          .json({
-            status: false,
-            message: "Username or password is wrong",
-            data: [],
-          });
+        return res.status(401).json({
+          status: false,
+          message: "Username or password is wrong",
+          data: [],
+        });
       }
 
       if (loadedUser.status == "INACTIVE") {
@@ -165,13 +163,68 @@ exports.login = (req, res, next) => {
     });
 };
 
+exports.adminLogin = (req, res, next) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  let loadedUser;
+  User.findOne({ username: username, type: "ADMIN" })
+    .then((user) => {
+      if (!user) {
+        return res.status(401).json({
+          status: false,
+          message: "Username or password is wrong",
+          data: [],
+        });
+      }
+      loadedUser = user;
+      return bcrypt.compare(password, user.password);
+    })
+    .then((isEqual) => {
+      if (!isEqual) {
+        return res.status(401).json({
+          status: false,
+          message: "Username or password is wrong",
+          data: [],
+        });
+      }
+
+      const token = jwt.sign(
+        {
+          id: loadedUser._id,
+          role: loadedUser.type,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRY }
+      );
+      res.status(200).json({
+        status: true,
+        message: "Admin successfully logged in",
+        data: {
+          role: loadedUser.type,
+          userId: loadedUser._id.toString(),
+          username: loadedUser.username,
+          email: loadedUser.email,
+          name: loadedUser.name,
+          phone: loadedUser.phone,
+        },
+        token: token,
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
+
 exports.getProfile = (req, res, next) => {
   const id = req.params.id;
   User.findById(id)
     .then((user) => {
       if (!user) {
         res.status(404).json({
-          status: "FALSE",
+          status: false,
           message: "No user found against requested id",
           data: [],
         });
@@ -259,13 +312,13 @@ exports.forgotPassword = (req, res, next) => {
         transporter.sendMail(emailData, (err, info) => {
           if (err) {
             res.status(500).json({
-              status: "FALSE",
+              status: false,
               message: "Error sending email",
               data: err,
             });
           } else {
             res.status(200).json({
-              status: "TRUE",
+              status: true,
               message: "An email has been sent. Kindly check your inbox",
               data: info,
             });
@@ -273,7 +326,7 @@ exports.forgotPassword = (req, res, next) => {
         });
       } else {
         res.status(500).json({
-          status: "FALSE",
+          status: false,
           message: "Error initializing forgot request",
           data: [],
         });
@@ -293,14 +346,14 @@ exports.checkForgotToken = (req, res, next) => {
     .then((user) => {
       if (!user) {
         return res.status(404).json({
-          status: "FALSE",
+          status: false,
           message: "No data found against token",
           data: [],
         });
       } else {
         res
           .status(200)
-          .json({ status: "TRUE", message: "Token found", data: [] });
+          .json({ status: true, message: "Token found", data: [] });
       }
     })
     .catch((err) => {
@@ -319,10 +372,10 @@ exports.activateAccount = (req, res, next) => {
       if (!user) {
         return res
           .status(404)
-          .json({ status: "FALSE", message: "No user found", data: [] });
+          .json({ status: false, message: "No user found", data: [] });
       } else if (user.status == "ACTIVE") {
         return res.status(422).json({
-          status: "FALSE",
+          status: false,
           message: "User already activated",
           data: [],
         });
@@ -330,7 +383,7 @@ exports.activateAccount = (req, res, next) => {
         user.status = "ACTIVE";
         user.save();
         res.status(200).json({
-          status: "TRUE",
+          status: true,
           message: "User activated successfully",
           data: [],
         });
@@ -362,10 +415,10 @@ exports.contact = (req, res, next) => {
     if (err) {
       res
         .status(500)
-        .json({ status: "FALSE", message: "Error sending email", data: err });
+        .json({ status: false, message: "Error sending email", data: err });
     } else {
       res.status(200).json({
-        status: "TRUE",
+        status: true,
         message: "Your query has been sent",
         data: info,
       });
