@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/User");
+const WishlistController = require("./wishlist");
 
 var transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -125,7 +126,6 @@ exports.login = (req, res, next) => {
           data: [],
         });
       }
-
       if (loadedUser.status == "INACTIVE") {
         return res.status(401).json({
           status: false,
@@ -133,6 +133,7 @@ exports.login = (req, res, next) => {
           data: [],
         });
       }
+
       const token = jwt.sign(
         {
           id: loadedUser._id,

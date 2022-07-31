@@ -7,6 +7,7 @@ const Role = require("../helpers/role");
 
 router.get("/all", authorize(Role.Admin), orderController.getAllOrders);
 router.get("/get/:id", authorize(), orderController.getByUserId);
+router.get("/detail/:id", authorize(), orderController.getOrderDetail);
 router.post("/add", authorize(Role.User), [
     check("user_id", "User Id is required").notEmpty(),
     check("address", "Address is required").notEmpty(),

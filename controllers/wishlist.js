@@ -78,32 +78,33 @@ exports.getByUserId = (req, res, next) => {
     });
 };
 
+
 exports.existItem = (req, res, next) => {
-    const userId = req.body.user_id;
-    const prodId = req.body.prod_id;
-    Wishlist.findOne({ user_id: userId, prod_id: prodId })
-      .then((data) => {
-        if (data !== null) {
-          res.status(409).json({
-            status: false,
-            message: "This product already exists in wishilist",
-            data: {},
-          });
-        } else {
-          res.status(200).json({
-            status: true,
-            message: "This product not found in wishlist",
-            data: {},
-          });
-        }
-      })
-      .catch((err) => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
-        next(err);
-      });
-  };
+  const userId = req.body.user_id;
+  const prodId = req.body.prod_id;
+  Wishlist.findOne({ user_id: userId, prod_id: prodId })
+    .then((data) => {
+      if (data !== null) {
+        res.status(409).json({
+          status: false,
+          message: "This product already exists in wishilist",
+          data: {},
+        });
+      } else {
+        res.status(200).json({
+          status: true,
+          message: "This product not found in wishlist",
+          data: {},
+        });
+      }
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+      }
+      next(err);
+    });
+};
 
 exports.deleteById = (req, res, next) => {
   const id = req.params.id;
