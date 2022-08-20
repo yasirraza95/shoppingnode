@@ -24,6 +24,11 @@ router.post(
   userController.signup
 );
 
+router.post(
+  "/refreshtoken",
+  [body("token").trim().not().isEmpty()],
+  userController.refreshToken
+);
 router.post("/login", userController.login);
 router.post("/adminLogin", userController.adminLogin);
 

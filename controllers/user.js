@@ -3,7 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/User");
-const WishlistController = require("./wishlist");
+const RefreshToken = require("../models/RefreshToken");
+const { v4: uuidv4 } = require("uuid");
 
 var transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -102,6 +103,43 @@ exports.signup = (req, res, next) => {
     });
 };
 
+exports.refreshToken = async (req, res) => {
+  const requestToken = req.body.token;
+  if (requestToken == null) {
+    return res.status(403).json({ message: "Refresh token is required!" });
+  }
+  try {
+    let refreshToken = await RefreshToken.findOne({ token: requestToken });
+    if (!refreshToken) {
+      res.status(403).json({ message: "Refresh token not found" });
+      return;
+    }
+    if (RefreshToken.verifyExpiration(refreshToken)) {
+      RefreshToken.findByIdAndRemove(refreshToken._id, {
+        useFindAndModify: false,
+      }).exec();
+
+      res.status(403).json({
+        message: "Refresh token was expired. Please make a new signin request",
+      });
+      return;
+    }
+    let newAccessToken = jwt.sign(
+      { id: refreshToken.user_id._id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: process.env.JWT_EXPIRY,
+      }
+    );
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: refreshToken.token,
+    });
+  } catch (err) {
+    return res.status(500).send({ message: err });
+  }
+};
+
 exports.login = (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -142,6 +180,30 @@ exports.login = (req, res, next) => {
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRY }
       );
+
+      let _token = uuidv4();
+      let expiredAt = new Date();
+      expiredAt.setSeconds(
+        expiredAt.getSeconds() + process.env.REFRESH_JWT_EXPIRY
+      );
+
+      // const refreshToken = jwt.sign(
+      //   {
+      //     token: _token,
+      //     id: loadedUser._id,
+      //     role: loadedUser.type,
+      //   },
+      //   process.env.JWT_SECRET,
+      //   { expiresIn: process.env.REFRESH_JWT_EXPIRY }
+      // );
+      let newToken = new RefreshToken({
+        token: _token,
+        user_id: loadedUser._id,
+        expiry_date: expiredAt.getTime(),
+      });
+
+      newToken.save();
+
       res.status(200).json({
         status: true,
         message: "User successfully logged in",
@@ -154,6 +216,7 @@ exports.login = (req, res, next) => {
           phone: loadedUser.phone,
         },
         token: token,
+        refreshToken: newToken.token,
       });
     })
     .catch((err) => {

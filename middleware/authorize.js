@@ -1,22 +1,30 @@
-const { expressjwt } = require('express-jwt');
-const secret  = process.env.JWT_SECRET;
+const { expressjwt } = require("express-jwt");
+const secret = process.env.JWT_SECRET;
 
 module.exports = authorize;
 
 function authorize(roles = []) {
-    if (typeof roles === 'string') {
-        roles = [roles];
-    }
+  if (typeof roles === "string") {
+    roles = [roles];
+  }
 
-    return [
-        expressjwt({ secret, algorithms: ['HS256'] }),
+  return [
+    expressjwt({ secret, algorithms: ["HS256"] }),
 
-        (req, res, next) => {
-            if (roles.length && !roles.includes(req.auth.role)) {
-                return res.status(401).json({ status:"FALSE", message: 'Unauthorized', data:[] });
-            }
+    (err, req, res, next) => {
+      if (err.name === "UnauthorizedError") {
+        return res
+          .status(401)
+          .json({ status: false, message: err.message, data: [] });
+      }
 
-            next();
-        }
-    ];
+      if (roles.length && !roles.includes(req.auth.role)) {
+        return res
+          .status(401)
+          .json({ status: false, message: "You are not authorized user", data: [] });
+      }
+
+      next();
+    },
+  ];
 }

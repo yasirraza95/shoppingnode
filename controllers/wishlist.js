@@ -78,7 +78,6 @@ exports.getByUserId = (req, res, next) => {
     });
 };
 
-
 exports.existItem = (req, res, next) => {
   const userId = req.body.user_id;
   const prodId = req.body.prod_id;
