@@ -180,7 +180,6 @@ exports.login = (req, res, next) => {
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRY }
       );
-
       let _token = uuidv4();
       let expiredAt = new Date();
       expiredAt.setSeconds(
